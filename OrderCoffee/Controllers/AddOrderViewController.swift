@@ -63,34 +63,37 @@ class AddOrderViewController: UIViewController {
     
     // MARK: IBActions
     @IBAction func save() {
+        if checkValidation() == .none {
+            loadData()
+        } else {
+            showAlert(with: checkValidation().message)
+        }
+    }
+    
+    @IBAction func dismissView() {
         
+        guard let nav = self.navigationController else {
+            self.dismiss(animated: true, completion: nil)
+            return
+        }
+        nav.dismiss(animated: true, completion: nil)
+    }
+    
+    private func loadData() {
         guard let name = self.nameTextField.text, let email = self.emailTextField.text, name != "", email != "" else {
-            /// showAlert
-            addOrderValidation = .name
-            print("Enter both Name and Email")
-            showAlert()
             return
         }
         guard self.coffeeSizesSegmentedControl.selectedSegmentIndex > -1 else {
-            ///showAlert
-            print("Select Size")
-            addOrderValidation = .size
-            showAlert()
             return
         }
         guard let selectedSize = self.coffeeSizesSegmentedControl.titleForSegment(at: self.coffeeSizesSegmentedControl.selectedSegmentIndex) else {
-            print("Select Size")
             return
         }
         
         guard let indexPath = self.tableView.indexPathForSelectedRow else {
-            //fatalError("Error in selecting coffee!")
-            addOrderValidation = .coffee
-            showAlert()
-            return
+            fatalError("Error in selecting coffee!")
         }
-        
-        
+                
         self.vm.name = name
         self.vm.email = email
         
@@ -108,18 +111,7 @@ class AddOrderViewController: UIViewController {
             }
             
         }
-        
     }
-    
-    @IBAction func dismissView() {
-        
-        guard let nav = self.navigationController else {
-            self.dismiss(animated: true, completion: nil)
-            return
-        }
-        nav.dismiss(animated: true, completion: nil)
-    }
-    
     
 }
 
@@ -162,11 +154,22 @@ extension AddOrderViewController {
         })
     }
     
-    private func showAlert() {
-        if addOrderValidation != .none {
-            let alert = UIAlertController(title: "Data Required", message: addOrderValidation.message, preferredStyle: .alert)
-            alert.addAction(UIAlertAction(title: "Ok", style: UIAlertAction.Style.default, handler: nil))
-            self.present(alert, animated: true, completion: nil)
+    private func showAlert(with message: String) {
+        let alert = UIAlertController(title: "Data Required", message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "Ok", style: UIAlertAction.Style.default, handler: nil))
+        self.present(alert, animated: true, completion: nil)
+    }
+    
+    private func checkValidation() -> AddOrderValidation {
+        
+        if self.tableView.indexPathForSelectedRow == nil {
+            return .coffee
+        } else if self.coffeeSizesSegmentedControl.selectedSegmentIndex < 0 {
+            return .size
+        } else if self.nameTextField.text == "" || self.emailTextField.text == "" {
+            return .name
+        } else {
+            return .none
         }
     }
 }
